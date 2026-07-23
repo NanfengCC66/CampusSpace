@@ -123,7 +123,7 @@ CampusSpace/
 
 由于项目未部署到公网，请查看演示视频了解系统功能：
 
-[演示视频链接]
+[点击查看演示视频](https://github.com/NanfengCC66/CampusSpace/blob/main/演示视频.mp4)
 
 ## 贡献指南
 
@@ -135,8 +135,8 @@ MIT License
 
 ## 联系方式
 
-- 项目地址：https://github.com/your-username/CampusSpace
-- 问题反馈：https://github.com/your-username/CampusSpace/issues
+- 项目地址：https://github.com/NanfengCC66/CampusSpace
+- 问题反馈：https://github.com/NanfengCC66/CampusSpace/issues
 
 ---
 
