@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+
+{% block title %}首页 - CampusSpace 智约{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container text-center">
+        <h1 class="display-4 mb-4">
+            <i class="bi bi-building"></i> CampusSpace 智约
+        </h1>
+        <p class="lead mb-4">
+            校园教室与会议室智能预约及冲突优化平台
+        </p>
+        <p class="mb-4">
+            快速查找场地、智能推荐、在线预约、冲突检测
+        </p>
+        {% if not user.is_authenticated %}
+        <a href="{% url 'users:login' %}" class="btn btn-light btn-lg me-3">
+            <i class="bi bi-box-arrow-in-right"></i> 立即登录
+        </a>
+        <a href="{% url 'users:register' %}" class="btn btn-outline-light btn-lg">
+            <i class="bi bi-person-plus"></i> 注册账号
+        </a>
+        {% else %}
+        <a href="{% url 'venues:room_list' %}" class="btn btn-light btn-lg">
+            <i class="bi bi-search"></i> 查找场地
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="container my-5">
+    <h2 class="text-center mb-5">核心功能</h2>
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="card feature-card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="bi bi-search display-4 text-primary mb-3"></i>
+                    <h5 class="card-title">场地查询</h5>
+                    <p class="card-text text-muted">
+                        多条件筛选，快速查找合适的教室或会议室
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card feature-card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="bi bi-lightbulb display-4 text-warning mb-3"></i>
+                    <h5 class="card-title">智能推荐</h5>
+                    <p class="card-text text-muted">
+                        根据需求自动推荐最合适的场地
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card feature-card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="bi bi-calendar-check display-4 text-success mb-3"></i>
+                    <h5 class="card-title">在线预约</h5>
+                    <p class="card-text text-muted">
+                        在线提交预约申请，实时查看审批状态
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card feature-card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="bi bi-shield-check display-4 text-danger mb-3"></i>
+                    <h5 class="card-title">冲突检测</h5>
+                    <p class="card-text text-muted">
+                        自动检测时间冲突，避免重复预约
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Section -->
+{% if user.is_authenticated %}
+<div class="bg-light py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">快速入口</h2>
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-primary"><i class="bi bi-building"></i></h3>
+                        <h5>楼宇管理</h5>
+                        <p class="text-muted">查看所有楼宇信息</p>
+                        <a href="{% url 'venues:building_list' %}" class="btn btn-primary">
+                            查看楼宇
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-success"><i class="bi bi-door-open"></i></h3>
+                        <h5>场地浏览</h5>
+                        <p class="text-muted">浏览所有可用场地</p>
+                        <a href="{% url 'venues:room_list' %}" class="btn btn-success">
+                            浏览场地
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-warning"><i class="bi bi-gear"></i></h3>
+                        <h5>管理后台</h5>
+                        <p class="text-muted">系统管理设置</p>
+                        {% if user.is_admin %}
+                        <a href="/admin/" class="btn btn-warning">
+                            进入后台
+                        </a>
+                        {% else %}
+                        <span class="text-muted">需要管理员权限</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

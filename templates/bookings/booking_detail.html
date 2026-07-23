@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block title %}预约详情 - CampusSpace 智约{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'users:home' %}">首页</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'bookings:booking_list' %}">我的预约</a></li>
+            <li class="breadcrumb-item active">预约详情</li>
+        </ol>
+    </nav>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h3 class="card-title">
+                            <i class="bi bi-calendar-check text-primary"></i> {{ booking.title }}
+                        </h3>
+                        <span class="badge 
+                            {% if booking.status == 'pending' %}bg-warning
+                            {% elif booking.status == 'approved' %}bg-success
+                            {% elif booking.status == 'rejected' %}bg-danger
+                            {% elif booking.status == 'cancelled' %}bg-secondary
+                            {% else %}bg-info{% endif %} fs-6">
+                            {{ booking.get_status_display }}
+                        </span>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p>
+                                <strong><i class="bi bi-hash"></i> 预约编号：</strong>
+                                {{ booking.booking_no }}
+                            </p>
+                            <p>
+                                <strong><i class="bi bi-door-open"></i> 场地：</strong>
+                                <a href="{% url 'venues:room_detail' booking.venue.pk %}">
+                                    {{ booking.venue.name }}
+                                </a>
+                            </p>
+                            <p>
+                                <strong><i class="bi bi-calendar"></i> 开始时间：</strong>
+                                {{ booking.start_time|date:"Y-m-d H:i" }}
+                            </p>
+                            <p>
+                                <strong><i class="bi bi-calendar-check"></i> 结束时间：</strong>
+                                {{ booking.end_time|date:"Y-m-d H:i" }}
+                            </p>
+                            <p>
+                                <strong><i class="bi bi-clock"></i> 预约时长：</strong>
+                                {{ booking.duration_display }}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p>
+                                <strong><i class="bi bi-tag"></i> 预约用途：</strong>
+                                {{ booking.get_booking_type_display }}
+                            </p>
+                            <p>
+                                <strong><i class="bi bi-people"></i> 参与人数：</strong>
+                                {{ booking.participant_count }}人
+                            </p>
+                            <p>
+                                <strong><i class="bi bi-person"></i> 联系人：</strong>
+                                {{ booking.contact_name|default:"未设置" }}
+                            </p>
+                            <p>
+                                <strong><i class="bi bi-telephone"></i> 联系电话：</strong>
+                                {{ booking.contact_phone|default:"未设置" }}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    {% if booking.remark %}
+                    <hr>
+                    <h5><i class="bi bi-info-circle"></i> 备注</h5>
+                    <p>{{ booking.remark }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-gear text-primary"></i> 操作
+                    </h5>
+                    <hr>
+                    
+                    {% if booking.status == 'pending' or booking.status == 'approved' %}
+                        {% if booking.start_time > current_time %}
+                        <a href="{% url 'bookings:booking_cancel' booking.pk %}" 
+                           class="btn btn-danger w-100 mb-2"
+                           onclick="return confirm('确定要取消此预约吗？');">
+                            <i class="bi bi-x-circle"></i> 取消预约
+                        </a>
+                        {% else %}
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> 预约已开始，不可取消
+                        </div>
+                        {% endif %}
+                    {% endif %}
+                    
+                    <hr>
+                    
+                    <p class="mb-0">
+                        <small class="text-muted">
+                            <i class="bi bi-clock"></i> 创建时间：{{ booking.created_at|date:"Y-m-d H:i" }}
+                        </small>
+                    </p>
+                    <p class="mb-0">
+                        <small class="text-muted">
+                            <i class="bi bi-clock-history"></i> 更新时间：{{ booking.updated_at|date:"Y-m-d H:i" }}
+                        </small>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

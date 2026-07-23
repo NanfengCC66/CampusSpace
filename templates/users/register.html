@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}用户注册 - CampusSpace 智约{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h3 class="card-title text-center mb-4">
+                        <i class="bi bi-person-plus text-primary"></i> 用户注册
+                    </h3>
+                    
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_username" class="form-label">
+                                    <i class="bi bi-person"></i> 用户名 *
+                                </label>
+                                <input type="text" 
+                                       name="username" 
+                                       id="id_username" 
+                                       class="form-control {% if form.username.errors %}is-invalid{% endif %}"
+                                       value="{{ form.username.value|default:'' }}"
+                                       required>
+                                {% if form.username.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.username.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="id_email" class="form-label">
+                                    <i class="bi bi-envelope"></i> 邮箱 *
+                                </label>
+                                <input type="email" 
+                                       name="email" 
+                                       id="id_email" 
+                                       class="form-control {% if form.email.errors %}is-invalid{% endif %}"
+                                       value="{{ form.email.value|default:'' }}"
+                                       required>
+                                {% if form.email.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.email.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_first_name" class="form-label">
+                                    <i class="bi bi-person-badge"></i> 姓名
+                                </label>
+                                <input type="text" 
+                                       name="first_name" 
+                                       id="id_first_name" 
+                                       class="form-control"
+                                       value="{{ form.first_name.value|default:'' }}">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="id_role" class="form-label">
+                                    <i class="bi bi-person-badge"></i> 角色 *
+                                </label>
+                                <select name="role" 
+                                        id="id_role" 
+                                        class="form-select {% if form.role.errors %}is-invalid{% endif %}"
+                                        required>
+                                    <option value="">请选择角色</option>
+                                    <option value="student" {% if form.role.value == 'student' %}selected{% endif %}>学生</option>
+                                    <option value="teacher" {% if form.role.value == 'teacher' %}selected{% endif %}>教师</option>
+                                    <option value="admin" {% if form.role.value == 'admin' %}selected{% endif %}>管理员</option>
+                                </select>
+                                {% if form.role.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.role.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_password1" class="form-label">
+                                    <i class="bi bi-lock"></i> 密码 *
+                                </label>
+                                <input type="password" 
+                                       name="password1" 
+                                       id="id_password1" 
+                                       class="form-control {% if form.password1.errors %}is-invalid{% endif %}"
+                                       required>
+                                {% if form.password1.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.password1.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="id_password2" class="form-label">
+                                    <i class="bi bi-lock-fill"></i> 确认密码 *
+                                </label>
+                                <input type="password" 
+                                       name="password2" 
+                                       id="id_password2" 
+                                       class="form-control {% if form.password2.errors %}is-invalid{% endif %}"
+                                       required>
+                                {% if form.password2.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.password2.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_phone" class="form-label">
+                                    <i class="bi bi-telephone"></i> 联系电话
+                                </label>
+                                <input type="text" 
+                                       name="phone" 
+                                       id="id_phone" 
+                                       class="form-control"
+                                       value="{{ form.phone.value|default:'' }}">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="id_department" class="form-label">
+                                    <i class="bi bi-building"></i> 院系/部门
+                                </label>
+                                <input type="text" 
+                                       name="department" 
+                                       id="id_department" 
+                                       class="form-control"
+                                       value="{{ form.department.value|default:'' }}">
+                            </div>
+                        </div>
+                        
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-person-plus"></i> 注册
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <hr>
+                    
+                    <div class="text-center">
+                        <p class="mb-0">
+                            已有账号？
+                            <a href="{% url 'users:login' %}">立即登录</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

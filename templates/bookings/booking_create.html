@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+
+{% block title %}创建预约 - CampusSpace 智约{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'users:home' %}">首页</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'venues:room_list' %}">场地列表</a></li>
+            <li class="breadcrumb-item active">创建预约</li>
+        </ol>
+    </nav>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">
+                        <i class="bi bi-calendar-plus text-primary"></i> 创建预约
+                    </h3>
+                    
+                    <!-- 冲突检测结果 -->
+                    {% if conflicts %}
+                    <div class="alert alert-danger">
+                        <h5><i class="bi bi-exclamation-triangle"></i> 预约冲突</h5>
+                        <hr>
+                        <ul class="mb-0">
+                            {% for conflict in conflicts %}
+                            <li>{{ conflict.message }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- 设备警告 -->
+                    {% if equipment_warning %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i> {{ equipment_warning }}
+                    </div>
+                    {% endif %}
+                    
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- 表单错误提示 -->
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                            <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
+                        <!-- 场地信息 -->
+                        {% if venue %}
+                        <div class="alert alert-info">
+                            <h5><i class="bi bi-door-open"></i> 预约场地</h5>
+                            <hr>
+                            <p><strong>场地名称：</strong>{{ venue.name }}</p>
+                            <p><strong>所属楼宇：</strong>{{ venue.building.name }}</p>
+                            <p><strong>容量：</strong>{{ venue.capacity }}人</p>
+                            <p><strong>状态：</strong>
+                                {% if venue.status == 'available' %}
+                                <span class="badge bg-success">可用</span>
+                                {% else %}
+                                <span class="badge bg-danger">不可用</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mb-3">
+                            <label for="id_title" class="form-label">
+                                <i class="bi bi-info-circle"></i> 使用目的 *
+                            </label>
+                            <input type="text" name="title" id="id_title" 
+                                   class="form-control {% if form.title.errors %}is-invalid{% endif %}" 
+                                   value="{{ form.title.value|default:'' }}"
+                                   placeholder="如：部门例会、项目讨论、教学活动等"
+                                   required>
+                            {% for error in form.title.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_booking_type" class="form-label">
+                                    <i class="bi bi-tag"></i> 预约用途 *
+                                </label>
+                                <select name="booking_type" id="id_booking_type" class="form-select {% if form.booking_type.errors %}is-invalid{% endif %}" required>
+                                    <option value="teaching" {% if form.booking_type.value == 'teaching' %}selected{% endif %}>教学</option>
+                                    <option value="meeting" {% if form.booking_type.value == 'meeting' %}selected{% endif %}>会议</option>
+                                    <option value="activity" {% if form.booking_type.value == 'activity' %}selected{% endif %}>活动</option>
+                                    <option value="self_study" {% if form.booking_type.value == 'self_study' %}selected{% endif %}>自习</option>
+                                </select>
+                                {% for error in form.booking_type.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="id_participant_count" class="form-label">
+                                    <i class="bi bi-people"></i> 参与人数 *
+                                </label>
+                                <input type="number" name="participant_count" id="id_participant_count" 
+                                       class="form-control {% if form.participant_count.errors %}is-invalid{% endif %}" 
+                                       value="{{ form.participant_count.value|default:'' }}"
+                                       min="1"
+                                       max="{{ venue.capacity }}"
+                                       required>
+                                {% for error in form.participant_count.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_start_time" class="form-label">
+                                    <i class="bi bi-calendar"></i> 开始时间 *
+                                </label>
+                                <input type="datetime-local" name="start_time" id="id_start_time" 
+                                       class="form-control {% if form.start_time.errors %}is-invalid{% endif %}" 
+                                       value="{{ form.start_time.value|date:'Y-m-d\TH:i' }}"
+                                       required>
+                                {% for error in form.start_time.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="id_end_time" class="form-label">
+                                    <i class="bi bi-calendar-check"></i> 结束时间 *
+                                </label>
+                                <input type="datetime-local" name="end_time" id="id_end_time" 
+                                       class="form-control {% if form.end_time.errors %}is-invalid{% endif %}" 
+                                       value="{{ form.end_time.value|date:'Y-m-d\TH:i' }}"
+                                       required>
+                                {% for error in form.end_time.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_contact_name" class="form-label">
+                                    <i class="bi bi-person"></i> 联系人
+                                </label>
+                                <input type="text" name="contact_name" id="id_contact_name" 
+                                       class="form-control" 
+                                       value="{{ form.contact_name.value|default:'' }}">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="id_contact_phone" class="form-label">
+                                    <i class="bi bi-telephone"></i> 联系电话
+                                </label>
+                                <input type="text" name="contact_phone" id="id_contact_phone" 
+                                       class="form-control" 
+                                       value="{{ form.contact_phone.value|default:'' }}">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_remark" class="form-label">
+                                <i class="bi bi-info-circle"></i> 备注
+                            </label>
+                            <textarea name="remark" id="id_remark" 
+                                      class="form-control" 
+                                      rows="3">{{ form.remark.value|default:'' }}</textarea>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> 提交预约
+                            </button>
+                            <a href="{% url 'venues:room_list' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> 取消
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-info-circle text-primary"></i> 预约说明
+                    </h5>
+                    <hr>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success"></i> 预约时长：30分钟 - 8小时
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success"></i> 提交后需等待管理员审批
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success"></i> 开始前2小时内不可取消
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success"></i> 前后预约需间隔10分钟
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

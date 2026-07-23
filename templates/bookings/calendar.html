@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+
+{% block title %}预约日历 - CampusSpace{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+<style>
+    .fc {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    .fc-event {
+        cursor: pointer;
+    }
+    .fc-toolbar-title {
+        font-size: 1.5rem !important;
+    }
+    .legend-item {
+        display: inline-flex;
+        align-items: center;
+        margin-right: 15px;
+        margin-bottom: 5px;
+    }
+    .legend-color {
+        width: 20px;
+        height: 20px;
+        border-radius: 3px;
+        margin-right: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <h3>
+                <i class="fas fa-calendar-alt text-primary me-2"></i>预约日历
+            </h3>
+        </div>
+        <div class="col-md-6 text-end">
+            <form method="get" class="d-inline-flex gap-2">
+                <select name="venue" class="form-select" onchange="this.form.submit()">
+                    <option value="">所有场地</option>
+                    {% for venue in venues %}
+                        <option value="{{ venue.id }}" {% if request.GET.venue == venue.id|stringformat:"s" %}selected{% endif %}>
+                            {{ venue.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </form>
+            
+            <div class="btn-group ms-2">
+                <button id="btn-week" class="btn btn-outline-primary active">
+                    <i class="fas fa-calendar-week"></i> 周
+                </button>
+                <button id="btn-month" class="btn btn-outline-primary">
+                    <i class="fas fa-calendar"></i> 月
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body p-2">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #ffc107;"></div>
+                        <small>待审批</small>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #28a745;"></div>
+                        <small>已通过</small>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #dc3545;"></div>
+                        <small>已拒绝</small>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #6c757d;"></div>
+                        <small>已取消</small>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #17a2b8;"></div>
+                        <small>已完成</small>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #856404;"></div>
+                        <small>已过期</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div id="calendar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const calendarEl = document.getElementById('calendar');
+    const venueId = new URLSearchParams(window.location.search).get('venue') || '';
+    
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'timeGridWeek',
+        locale: 'zh-cn',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'timeGridWeek,dayGridMonth'
+        },
+        buttonText: {
+            today: '今天',
+            week: '周',
+            month: '月'
+        },
+        allDayText: '全天',
+        slotLabelFormat: {
+            hour: '2-digit',
+            minute: '2-digit',
+            meridiem: false,
+            hour12: false
+        },
+        eventTimeFormat: {
+            hour: '2-digit',
+            minute: '2-digit',
+            meridiem: false,
+            hour12: false
+        },
+        events: function(info, successCallback, failureCallback) {
+            const params = new URLSearchParams({
+                start: info.startStr,
+                end: info.endStr
+            });
+            if (venueId) {
+                params.append('venue', venueId);
+            }
+            
+            fetch('/bookings/calendar/events/?' + params.toString())
+                .then(response => response.json())
+                .then(data => successCallback(data))
+                .catch(error => failureCallback(error));
+        },
+        eventClick: function(info) {
+            window.location.href = info.event.url;
+        },
+        eventDidMount: function(info) {
+            const tooltip = new Tooltip(info.el, {
+                title: info.event.extendedProps.venue + ' - ' + info.event.extendedProps.user,
+                placement: 'top',
+                trigger: 'hover',
+                container: 'body'
+            });
+        },
+        height: 'auto',
+        slotMinTime: '07:00:00',
+        slotMaxTime: '22:00:00',
+        nowIndicator: true,
+        selectable: false,
+        editable: false
+    });
+    
+    calendar.render();
+    
+    document.getElementById('btn-week').addEventListener('click', function() {
+        calendar.changeView('timeGridWeek');
+        this.classList.add('active');
+        document.getElementById('btn-month').classList.remove('active');
+    });
+    
+    document.getElementById('btn-month').addEventListener('click', function() {
+        calendar.changeView('dayGridMonth');
+        this.classList.add('active');
+        document.getElementById('btn-week').classList.remove('active');
+    });
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tooltip.js@1.3.3/dist/umd/tooltip.min.js"></script>
+{% endblock %}

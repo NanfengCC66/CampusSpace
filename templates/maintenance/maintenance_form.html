@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if form.instance.pk %}编辑维修{% else %}提交维修申请{% endif %} - CampusSpace 智约{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'users:home' %}">首页</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'maintenance:maintenance_list' %}">维修停用列表</a></li>
+            <li class="breadcrumb-item active">{% if form.instance.pk %}编辑维修{% else %}提交维修申请{% endif %}</li>
+        </ol>
+    </nav>
+    
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">
+                        <i class="bi bi-tools text-primary"></i> 
+                        {% if form.instance.pk %}编辑维修申请{% else %}提交维修申请{% endif %}
+                    </h3>
+                    
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="id_venue" class="form-label">
+                                <i class="bi bi-door-open"></i> 场地 *
+                            </label>
+                            <select name="venue" id="id_venue" class="form-select" required>
+                                <option value="">请选择场地</option>
+                                {% for venue in form.venue.field.queryset %}
+                                <option value="{{ venue.id }}" 
+                                        {% if form.venue.value|stringformat:"s" == venue.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ venue.name }} ({{ venue.building.name }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_reason" class="form-label">
+                                <i class="bi bi-info-circle"></i> 停用原因 *
+                            </label>
+                            <input type="text" name="reason" id="id_reason" 
+                                   class="form-control" 
+                                   value="{{ form.reason.value|default:'' }}"
+                                   placeholder="如：空调故障、投影仪维修等"
+                                   required>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_start_time" class="form-label">
+                                    <i class="bi bi-calendar"></i> 开始时间 *
+                                </label>
+                                <input type="datetime-local" name="start_time" id="id_start_time" 
+                                       class="form-control" 
+                                       value="{{ form.start_time.value|date:'Y-m-d\TH:i' }}"
+                                       required>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="id_end_time" class="form-label">
+                                    <i class="bi bi-calendar-check"></i> 预计结束时间 *
+                                </label>
+                                <input type="datetime-local" name="end_time" id="id_end_time" 
+                                       class="form-control" 
+                                       value="{{ form.end_time.value|date:'Y-m-d\TH:i' }}"
+                                       required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_remark" class="form-label">
+                                <i class="bi bi-info-circle"></i> 备注
+                            </label>
+                            <textarea name="remark" id="id_remark" 
+                                      class="form-control" 
+                                      rows="3"
+                                      placeholder="详细说明维修情况...">{{ form.remark.value|default:'' }}</textarea>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> 提交申请
+                            </button>
+                            <a href="{% url 'maintenance:maintenance_list' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> 取消
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ schedule.course_name }} - CampusSpace 智约{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'users:home' %}">首页</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'schedules:schedule_list' %}">固定课表列表</a></li>
+            <li class="breadcrumb-item active">{{ schedule.course_name }}</li>
+        </ol>
+    </nav>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">
+                        <i class="bi bi-calendar-week text-primary"></i> {{ schedule.course_name }}
+                    </h3>
+                    
+                    <hr>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p>
+                                <strong><i class="bi bi-door-open"></i> 场地：</strong>
+                                <a href="{% url 'venues:room_detail' schedule.venue.pk %}">
+                                    {{ schedule.venue.name }}
+                                </a>
+                            </p>
+                            <p>
+                                <strong><i class="bi bi-person"></i> 授课教师：</strong>
+                                {{ schedule.teacher|default:"未设置" }}
+                            </p>
+                            <p>
+                                <strong><i class="bi bi-calendar"></i> 星期：</strong>
+                                {{ schedule.get_day_display }}
+                            </p>
+                            <p>
+                                <strong><i class="bi bi-clock"></i> 节次：</strong>
+                                第{{ schedule.period }}节
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p>
+                                <strong><i class="bi bi-calendar-range"></i> 周次：</strong>
+                                {{ schedule.week_range }}
+                            </p>
+                            <p>
+                                <strong><i class="bi bi-people"></i> 班级：</strong>
+                                {{ schedule.class_name|default:"未设置" }}
+                            </p>
+                            <p>
+                                <strong><i class="bi bi-person-badge"></i> 学生人数：</strong>
+                                {{ schedule.student_count|default:"未设置" }}
+                            </p>
+                            <p>
+                                <strong><i class="bi bi-calendar-date"></i> 学期：</strong>
+                                {{ schedule.semester }}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    {% if schedule.remark %}
+                    <hr>
+                    <h5><i class="bi bi-info-circle"></i> 备注</h5>
+                    <p>{{ schedule.remark }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-gear text-primary"></i> 操作
+                    </h5>
+                    <hr>
+                    
+                    {% if user.is_admin %}
+                    <a href="{% url 'schedules:schedule_edit' schedule.pk %}" 
+                       class="btn btn-warning w-100 mb-2">
+                        <i class="bi bi-pencil"></i> 编辑课表
+                    </a>
+                    
+                    <form method="post" action="{% url 'schedules:schedule_delete' schedule.pk %}" 
+                          onsubmit="return confirm('确定要删除这条课表记录吗？');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger w-100">
+                            <i class="bi bi-trash"></i> 删除课表
+                        </button>
+                    </form>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> 需要管理员权限才能编辑
+                    </div>
+                    {% endif %}
+                    
+                    <hr>
+                    
+                    <p class="mb-0">
+                        <small class="text-muted">
+                            <i class="bi bi-clock"></i> 创建时间：{{ schedule.created_at|date:"Y-m-d H:i" }}
+                        </small>
+                    </p>
+                    {% if schedule.created_by %}
+                    <p class="mb-0">
+                        <small class="text-muted">
+                            <i class="bi bi-person"></i> 创建人：{{ schedule.created_by.first_name|default:schedule.created_by.username }}
+                        </small>
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

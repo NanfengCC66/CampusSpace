@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ room.name }} - CampusSpace 智约{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'users:home' %}">首页</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'venues:room_list' %}">场地列表</a></li>
+            <li class="breadcrumb-item active">{{ room.name }}</li>
+        </ol>
+    </nav>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h3>
+                            <i class="bi bi-door-open text-primary"></i> {{ room.name }}
+                        </h3>
+                        {% if room.status == 'available' %}
+                        <span class="badge bg-success fs-6">{{ room.get_status_display }}</span>
+                        {% elif room.status == 'maintenance' %}
+                        <span class="badge bg-warning fs-6">{{ room.get_status_display }}</span>
+                        {% else %}
+                        <span class="badge bg-danger fs-6">{{ room.get_status_display }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p>
+                                <strong><i class="bi bi-building"></i> 所属楼宇：</strong>
+                                <a href="{% url 'venues:building_detail' room.building.pk %}">
+                                    {{ room.building.name }}
+                                </a>
+                            </p>
+                            <p>
+                                <strong><i class="bi bi-tag"></i> 场地类型：</strong>
+                                {{ room.get_venue_type_display }}
+                            </p>
+                            <p>
+                                <strong><i class="bi bi-layers"></i> 楼层：</strong>
+                                {{ room.floor|default:"未设置" }}
+                            </p>
+                            <p>
+                                <strong><i class="bi bi-hash"></i> 房间号：</strong>
+                                {{ room.room_number|default:"未设置" }}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p>
+                                <strong><i class="bi bi-people"></i> 容纳人数：</strong>
+                                {{ room.capacity }} 人
+                            </p>
+                            <p>
+                                <strong><i class="bi bi-arrows-fullscreen"></i> 面积：</strong>
+                                {{ room.area|default:"未设置" }} {% if room.area %}平方米{% endif %}
+                            </p>
+                            <p>
+                                <strong><i class="bi bi-person-badge"></i> 负责人：</strong>
+                                {{ room.manager|default:"未设置" }}
+                            </p>
+                            <p>
+                                <strong><i class="bi bi-telephone"></i> 联系电话：</strong>
+                                {{ room.manager_phone|default:"未设置" }}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    {% if room.description %}
+                    <hr>
+                    <h5><i class="bi bi-info-circle"></i> 描述</h5>
+                    <p>{{ room.description }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- 设备信息 -->
+            {% if room.room_equipments.all %}
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-tools text-primary"></i> 设备信息
+                    </h5>
+                    <hr>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>设备名称</th>
+                                    <th>数量</th>
+                                    <th>状态</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for re in room.room_equipments.all %}
+                                <tr>
+                                    <td>{{ re.equipment.name }}</td>
+                                    <td>{{ re.quantity }}</td>
+                                    <td>
+                                        {% if re.status == 'normal' %}
+                                        <span class="badge bg-success">{{ re.get_status_display }}</span>
+                                        {% elif re.status == 'maintenance' %}
+                                        <span class="badge bg-warning">{{ re.get_status_display }}</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">{{ re.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-calendar-check text-primary"></i> 预约操作
+                    </h5>
+                    <hr>
+                    
+                    {% if room.is_available %}
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle"></i> 该场地可预约
+                    </div>
+                    <a href="{% url 'bookings:booking_create' %}?venue={{ room.id }}" 
+                       class="btn btn-primary w-100 mb-3">
+                        <i class="bi bi-calendar-plus"></i> 预约此场地
+                    </a>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i> 
+                        该场地当前{{ room.get_status_display }}，不可预约
+                    </div>
+                    {% endif %}
+                    
+                    <hr>
+                    
+                    <p class="mb-0">
+                        <small class="text-muted">
+                            <i class="bi bi-clock"></i> 创建时间：{{ room.created_at|date:"Y-m-d H:i" }}
+                        </small>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

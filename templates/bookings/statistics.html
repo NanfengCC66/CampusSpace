@@ -1,0 +1,355 @@
+{% extends 'base.html' %}
+
+{% block title %}统计分析 - CampusSpace{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-bottom: 20px;
+    }
+    .stat-card {
+        transition: transform 0.2s;
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    .loading {
+        text-align: center;
+        padding: 50px;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h3><i class="fas fa-chart-bar text-primary me-2"></i>统计分析</h3>
+        </div>
+        <div class="col-md-6">
+            <form method="get" class="row g-2 justify-content-end">
+                <div class="col-auto">
+                    <input type="date" name="start_date" class="form-control" value="{{ start_date|date:'Y-m-d' }}">
+                </div>
+                <div class="col-auto">
+                    <input type="date" name="end_date" class="form-control" value="{{ end_date|date:'Y-m-d' }}">
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> 查询
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card stat-card bg-primary text-white">
+                <div class="card-body">
+                    <h6 class="card-title">总预约数</h6>
+                    <h2 id="stat-total" class="mb-0">-</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card bg-success text-white">
+                <div class="card-body">
+                    <h6 class="card-title">已通过</h6>
+                    <h2 id="stat-approved" class="mb-0">-</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card bg-danger text-white">
+                <div class="card-body">
+                    <h6 class="card-title">已拒绝</h6>
+                    <h2 id="stat-rejected" class="mb-0">-</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card bg-info text-white">
+                <div class="card-body">
+                    <h6 class="card-title">平均利用率</h6>
+                    <h2 id="stat-utilization" class="mb-0">-</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-chart-line me-2"></i>预约趋势</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-chart-pie me-2"></i>状态分布</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-chart-bar me-2"></i>场地利用率</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="utilizationChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-clock me-2"></i>时间段分布</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="timeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-tags me-2"></i>预约类型统计</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="typeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-star me-2"></i>热门场地 TOP 10</h6>
+                </div>
+                <div class="card-body">
+                    <div id="popularVenues">
+                        <div class="loading"><i class="fas fa-spinner fa-spin"></i> 加载中...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const startDate = '{{ start_date|date:"Y-m-d" }}';
+const endDate = '{{ end_date|date:"Y-m-d" }}';
+
+const chartColors = {
+    primary: '#0d6efd',
+    success: '#198754',
+    danger: '#dc3545',
+    warning: '#ffc107',
+    info: '#0dcaf0',
+    secondary: '#6c757d'
+};
+
+function fetchAPI(url, callback) {
+    fetch(`${url}?start_date=${startDate}&end_date=${endDate}`)
+        .then(response => response.json())
+        .then(data => callback(data))
+        .catch(error => console.error('Error:', error));
+}
+
+let trendChart, statusChart, utilizationChart, timeChart, typeChart;
+
+fetchAPI('/bookings/api/trend/', function(data) {
+    document.getElementById('stat-total').textContent = data.total || 0;
+    document.getElementById('stat-approved').textContent = data.approved || 0;
+    document.getElementById('stat-rejected').textContent = data.rejected || 0;
+    
+    if (data.trend && data.trend.length > 0) {
+        const ctx = document.getElementById('trendChart').getContext('2d');
+        trendChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.trend.map(d => d.period ? d.period.split('T')[0] : ''),
+                datasets: [{
+                    label: '总预约',
+                    data: data.trend.map(d => d.total),
+                    borderColor: chartColors.primary,
+                    tension: 0.1
+                }, {
+                    label: '已通过',
+                    data: data.trend.map(d => d.approved),
+                    borderColor: chartColors.success,
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top' }
+                }
+            }
+        });
+    }
+});
+
+fetchAPI('/bookings/api/status/', function(data) {
+    if (data && Object.keys(data).length > 0) {
+        const ctx = document.getElementById('statusChart').getContext('2d');
+        const labels = {
+            'pending': '待审批',
+            'approved': '已通过',
+            'rejected': '已拒绝',
+            'cancelled': '已取消',
+            'completed': '已完成',
+            'expired': '已过期'
+        };
+        
+        statusChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(data).map(k => labels[k] || k),
+                datasets: [{
+                    data: Object.values(data),
+                    backgroundColor: [
+                        chartColors.warning,
+                        chartColors.success,
+                        chartColors.danger,
+                        chartColors.secondary,
+                        chartColors.info,
+                        '#856404'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'right' }
+                }
+            }
+        });
+    }
+});
+
+fetchAPI('/bookings/api/utilization/', function(data) {
+    document.getElementById('stat-utilization').textContent = (data.average || 0) + '%';
+    
+    if (data.venues && data.venues.length > 0) {
+        const ctx = document.getElementById('utilizationChart').getContext('2d');
+        utilizationChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.venues.slice(0, 10).map(d => d.venue_name),
+                datasets: [{
+                    label: '利用率 (%)',
+                    data: data.venues.slice(0, 10).map(d => d.utilization_rate),
+                    backgroundColor: chartColors.primary
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, max: 100 }
+                }
+            }
+        });
+    }
+});
+
+fetchAPI('/bookings/api/time/', function(data) {
+    if (data && Object.keys(data).length > 0) {
+        const ctx = document.getElementById('timeChart').getContext('2d');
+        timeChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(data),
+                datasets: [{
+                    label: '预约数量',
+                    data: Object.values(data),
+                    backgroundColor: chartColors.info
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    }
+});
+
+fetchAPI('/bookings/api/booking-types/', function(data) {
+    if (data && (data.schedule_count > 0 || data.temp_booking_count > 0)) {
+        const ctx = document.getElementById('typeChart').getContext('2d');
+        typeChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['固定课表', '临时预约'],
+                datasets: [{
+                    data: [data.schedule_count || 0, data.temp_booking_count || 0],
+                    backgroundColor: [chartColors.warning, chartColors.primary]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'right' }
+                }
+            }
+        });
+    }
+});
+
+fetchAPI('/bookings/api/popular/', function(data) {
+    const container = document.getElementById('popularVenues');
+    if (data && data.length > 0) {
+        let html = '<table class="table table-sm"><thead><tr><th>#</th><th>场地</th><th>预约数</th><th>使用时长</th></tr></thead><tbody>';
+        data.forEach((item, index) => {
+            html += `<tr>
+                <td>${index + 1}</td>
+                <td>${item.venue_name}<br><small class="text-muted">${item.building_name}</small></td>
+                <td>${item.booking_count}</td>
+                <td>${item.total_hours}h</td>
+            </tr>`;
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    } else {
+        container.innerHTML = '<div class="text-center text-muted py-4">暂无数据</div>';
+    }
+});
+</script>
+{% endblock %}

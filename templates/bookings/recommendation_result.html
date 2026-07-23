@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+
+{% block title %}推荐结果 - CampusSpace{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-filter me-2"></i>您的需求
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <strong>时间段：</strong>
+                            {{ request_data.start_time|date:"Y-m-d H:i" }} 至 {{ request_data.end_time|date:"H:i" }}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>参与人数：</strong>{{ request_data.participant_count }} 人
+                        </div>
+                        <div class="col-md-3">
+                            <strong>所需设备：</strong>
+                            {% if request_data.required_equipments %}
+                                {{ request_data.required_equipments|join:", " }}
+                            {% else %}
+                                无
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>偏好建筑：</strong>
+                            {% if request_data.preferred_building %}
+                                {{ request_data.preferred_building.name }}
+                            {% else %}
+                                无
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if recommendations %}
+        <div class="row">
+            <div class="col-12">
+                <h4 class="mb-4">
+                    <i class="fas fa-star text-warning me-2"></i>推荐场地（共{{ recommendations|length }}个）
+                </h4>
+            </div>
+        </div>
+        
+        <div class="row">
+            {% for result in recommendations %}
+                <div class="col-lg-4 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-header {% if result.rank == 1 %}bg-warning{% elif result.rank == 2 %}bg-secondary{% else %}bg-info{% endif %} text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-trophy me-2"></i>第{{ result.rank }}名
+                                <span class="badge bg-light text-dark float-end">{{ result.score_detail.total_score }}分</span>
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="card-title">
+                                <a href="{% url 'venues:room_detail' result.room.pk %}" class="text-decoration-none">
+                                    {{ result.room.name }}
+                                </a>
+                            </h6>
+                            <p class="text-muted small mb-2">
+                                <i class="fas fa-building me-1"></i>{{ result.room.building.name }}
+                                <i class="fas fa-users ms-3 me-1"></i>{{ result.room.capacity }}人
+                            </p>
+                            
+                            <div class="mb-3">
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar bg-success" style="width: {{ result.score_detail.capacity_score|floatformat:0 }}%">
+                                        容量
+                                    </div>
+                                    <div class="progress-bar bg-primary" style="width: {{ result.score_detail.equipment_score|floatformat:0 }}%">
+                                        设备
+                                    </div>
+                                    <div class="progress-bar bg-info" style="width: {{ result.score_detail.building_score|floatformat:0 }}%">
+                                        建筑
+                                    </div>
+                                    <div class="progress-bar bg-warning" style="width: {{ result.score_detail.continuity_score|floatformat:0 }}%">
+                                        连续
+                                    </div>
+                                    <div class="progress-bar bg-secondary" style="width: {{ result.score_detail.energy_score|floatformat:0 }}%">
+                                        节能
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {% if result.score_detail.reasons %}
+                                <div class="mb-2">
+                                    <strong class="text-success small">
+                                        <i class="fas fa-check-circle me-1"></i>优势：
+                                    </strong>
+                                    <ul class="list-unstyled small text-muted mb-0">
+                                        {% for reason in result.score_detail.reasons %}
+                                            <li>• {{ reason }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+                            
+                            {% if result.score_detail.deductions %}
+                                <div class="mb-3">
+                                    <strong class="text-warning small">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>不足：
+                                    </strong>
+                                    <ul class="list-unstyled small text-muted mb-0">
+                                        {% for deduction in result.score_detail.deductions %}
+                                            <li>• {{ deduction }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="d-grid">
+                                <a href="{% url 'bookings:booking_create' %}?venue={{ result.room.pk }}" 
+                                   class="btn btn-primary btn-sm">
+                                    <i class="fas fa-calendar-plus me-1"></i>立即预约
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-warning">
+                    <h5 class="alert-heading">
+                        <i class="fas fa-exclamation-triangle me-2"></i>未找到符合条件的场地
+                    </h5>
+                    <hr>
+                    {% if alternative %}
+                        <p>{{ alternative.message }}</p>
+                        
+                        {% if alternative.suggestion_type == 'time_alternative' %}
+                            <h6 class="mt-3">附近可用时间段：</h6>
+                            <div class="row">
+                                {% for slot in alternative.available_slots %}
+                                    <div class="col-md-4 mb-2">
+                                        <div class="card">
+                                            <div class="card-body p-2">
+                                                <small>
+                                                    <strong>{{ slot.start_time|date:"m-d H:i" }} - {{ slot.end_time|date:"H:i" }}</strong>
+                                                    <br>
+                                                    <span class="text-muted">{{ slot.available_count }}个场地可用</span>
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% elif alternative.suggestion_type == 'room_alternative' %}
+                            <h6 class="mt-3">替代场地：</h6>
+                            <ul>
+                                {% for room in alternative.alternative_rooms %}
+                                    <li>
+                                        <a href="{% url 'venues:room_detail' room.pk %}">{{ room.name }}</a>
+                                        ({{ room.building.name }}，{{ room.capacity }}人)
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <a href="{% url 'bookings:recommendation' %}" class="btn btn-secondary">
+                <i class="fas fa-redo me-2"></i>重新推荐
+            </a>
+            <a href="{% url 'venues:room_list' %}" class="btn btn-outline-primary ms-2">
+                <i class="fas fa-list me-2"></i>查看所有场地
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

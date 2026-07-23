@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}场地列表 - CampusSpace 智约{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'users:home' %}">首页</a></li>
+            <li class="breadcrumb-item active">场地列表</li>
+        </ol>
+    </nav>
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-door-open"></i> 场地列表</h2>
+        {% if user.is_admin %}
+        <a href="/admin/venues/room/add/" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> 添加场地
+        </a>
+        {% endif %}
+    </div>
+    
+    <!-- 筛选条件 -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">楼宇</label>
+                    <select name="building" class="form-select">
+                        <option value="">全部</option>
+                        {% for b in buildings %}
+                        <option value="{{ b.id }}" 
+                                {% if request.GET.building == b.id|stringformat:"s" %}selected{% endif %}>
+                            {{ b.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">场地类型</label>
+                    <select name="type" class="form-select">
+                        <option value="">全部</option>
+                        <option value="classroom" 
+                                {% if request.GET.type == 'classroom' %}selected{% endif %}>教室</option>
+                        <option value="meeting_room" 
+                                {% if request.GET.type == 'meeting_room' %}selected{% endif %}>会议室</option>
+                        <option value="lab" 
+                                {% if request.GET.type == 'lab' %}selected{% endif %}>实验室</option>
+                        <option value="activity_room" 
+                                {% if request.GET.type == 'activity_room' %}selected{% endif %}>活动室</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">状态</label>
+                    <select name="status" class="form-select">
+                        <option value="">全部</option>
+                        <option value="available" 
+                                {% if request.GET.status == 'available' %}selected{% endif %}>可用</option>
+                        <option value="maintenance" 
+                                {% if request.GET.status == 'maintenance' %}selected{% endif %}>维修中</option>
+                        <option value="disabled" 
+                                {% if request.GET.status == 'disabled' %}selected{% endif %}>已停用</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-search"></i> 筛选
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    {% if rooms %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>场地名称</th>
+                    <th>楼宇</th>
+                    <th>类型</th>
+                    <th>楼层</th>
+                    <th>房间号</th>
+                    <th>容量</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for room in rooms %}
+                <tr>
+                    <td>{{ room.name }}</td>
+                    <td>{{ room.building.name }}</td>
+                    <td>{{ room.get_venue_type_display }}</td>
+                    <td>{{ room.floor|default:"-" }}</td>
+                    <td>{{ room.room_number|default:"-" }}</td>
+                    <td>{{ room.capacity }} 人</td>
+                    <td>
+                        {% if room.status == 'available' %}
+                        <span class="badge bg-success">{{ room.get_status_display }}</span>
+                        {% elif room.status == 'maintenance' %}
+                        <span class="badge bg-warning">{{ room.get_status_display }}</span>
+                        {% else %}
+                        <span class="badge bg-danger">{{ room.get_status_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'venues:room_detail' room.pk %}" 
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye"></i> 查看
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> 暂无场地数据，请联系管理员添加。
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

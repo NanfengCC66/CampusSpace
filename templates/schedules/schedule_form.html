@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if form.instance.pk %}编辑课表{% else %}添加课表{% endif %} - CampusSpace 智约{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'users:home' %}">首页</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'schedules:schedule_list' %}">固定课表列表</a></li>
+            <li class="breadcrumb-item active">{% if form.instance.pk %}编辑课表{% else %}添加课表{% endif %}</li>
+        </ol>
+    </nav>
+    
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">
+                        <i class="bi bi-calendar-week text-primary"></i> 
+                        {% if form.instance.pk %}编辑固定课表{% else %}添加固定课表{% endif %}
+                    </h3>
+                    
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_venue" class="form-label">
+                                    <i class="bi bi-door-open"></i> 场地 *
+                                </label>
+                                <select name="venue" id="id_venue" class="form-select" required>
+                                    <option value="">请选择场地</option>
+                                    {% for venue in form.venue.field.queryset %}
+                                    <option value="{{ venue.id }}" 
+                                            {% if form.venue.value|stringformat:"s" == venue.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ venue.name }} ({{ venue.building.name }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="id_course_name" class="form-label">
+                                    <i class="bi bi-book"></i> 课程名称 *
+                                </label>
+                                <input type="text" name="course_name" id="id_course_name" 
+                                       class="form-control" 
+                                       value="{{ form.course_name.value|default:'' }}"
+                                       required>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_teacher" class="form-label">
+                                    <i class="bi bi-person"></i> 授课教师
+                                </label>
+                                <input type="text" name="teacher" id="id_teacher" 
+                                       class="form-control" 
+                                       value="{{ form.teacher.value|default:'' }}">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="id_semester" class="form-label">
+                                    <i class="bi bi-calendar-date"></i> 学期 *
+                                </label>
+                                <input type="text" name="semester" id="id_semester" 
+                                       class="form-control" 
+                                       value="{{ form.semester.value|default:'2025-2026-2' }}"
+                                       placeholder="如：2025-2026-2"
+                                       required>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="id_day_of_week" class="form-label">
+                                    <i class="bi bi-calendar"></i> 星期 *
+                                </label>
+                                <select name="day_of_week" id="id_day_of_week" class="form-select" required>
+                                    <option value="">请选择</option>
+                                    <option value="1" {% if form.day_of_week.value|stringformat:"s" == "1" %}selected{% endif %}>周一</option>
+                                    <option value="2" {% if form.day_of_week.value|stringformat:"s" == "2" %}selected{% endif %}>周二</option>
+                                    <option value="3" {% if form.day_of_week.value|stringformat:"s" == "3" %}selected{% endif %}>周三</option>
+                                    <option value="4" {% if form.day_of_week.value|stringformat:"s" == "4" %}selected{% endif %}>周四</option>
+                                    <option value="5" {% if form.day_of_week.value|stringformat:"s" == "5" %}selected{% endif %}>周五</option>
+                                    <option value="6" {% if form.day_of_week.value|stringformat:"s" == "6" %}selected{% endif %}>周六</option>
+                                    <option value="7" {% if form.day_of_week.value|stringformat:"s" == "7" %}selected{% endif %}>周日</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="id_period" class="form-label">
+                                    <i class="bi bi-clock"></i> 节次 *
+                                </label>
+                                <select name="period" id="id_period" class="form-select" required>
+                                    <option value="">请选择</option>
+                                    <option value="1-2" {% if form.period.value == "1-2" %}selected{% endif %}>第1-2节</option>
+                                    <option value="3-4" {% if form.period.value == "3-4" %}selected{% endif %}>第3-4节</option>
+                                    <option value="5-6" {% if form.period.value == "5-6" %}selected{% endif %}>第5-6节</option>
+                                    <option value="7-8" {% if form.period.value == "7-8" %}selected{% endif %}>第7-8节</option>
+                                    <option value="9-10" {% if form.period.value == "9-10" %}selected{% endif %}>第9-10节</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">
+                                    <i class="bi bi-calendar-range"></i> 周次 *
+                                </label>
+                                <div class="input-group">
+                                    <input type="number" name="start_week" 
+                                           class="form-control" 
+                                           value="{{ form.start_week.value|default:'1' }}"
+                                           min="1" max="25"
+                                           placeholder="开始周"
+                                           required>
+                                    <span class="input-group-text">至</span>
+                                    <input type="number" name="end_week" 
+                                           class="form-control" 
+                                           value="{{ form.end_week.value|default:'16' }}"
+                                           min="1" max="25"
+                                           placeholder="结束周"
+                                           required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_class_name" class="form-label">
+                                    <i class="bi bi-people"></i> 班级
+                                </label>
+                                <input type="text" name="class_name" id="id_class_name" 
+                                       class="form-control" 
+                                       value="{{ form.class_name.value|default:'' }}"
+                                       placeholder="如：计算机2022-1班">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="id_student_count" class="form-label">
+                                    <i class="bi bi-person-badge"></i> 学生人数
+                                </label>
+                                <input type="number" name="student_count" id="id_student_count" 
+                                       class="form-control" 
+                                       value="{{ form.student_count.value|default:'' }}"
+                                       min="0">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_remark" class="form-label">
+                                <i class="bi bi-info-circle"></i> 备注
+                            </label>
+                            <textarea name="remark" id="id_remark" 
+                                      class="form-control" 
+                                      rows="3">{{ form.remark.value|default:'' }}</textarea>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> 保存
+                            </button>
+                            <a href="{% url 'schedules:schedule_list' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> 取消
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

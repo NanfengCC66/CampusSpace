@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ building.name }} - CampusSpace 智约{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'users:home' %}">首页</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'venues:building_list' %}">楼宇列表</a></li>
+            <li class="breadcrumb-item active">{{ building.name }}</li>
+        </ol>
+    </nav>
+    
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h4 class="card-title">
+                        <i class="bi bi-building text-primary"></i> {{ building.name }}
+                    </h4>
+                    <hr>
+                    <p>
+                        <strong><i class="bi bi-geo-alt"></i> 位置：</strong><br>
+                        {{ building.location|default:"未设置" }}
+                    </p>
+                    <p>
+                        <strong><i class="bi bi-layers"></i> 楼层数：</strong>
+                        {{ building.total_floors }} 层
+                    </p>
+                    <p>
+                        <strong><i class="bi bi-door-open"></i> 场地数：</strong>
+                        {{ building.room_count }} 个
+                    </p>
+                    {% if building.description %}
+                    <hr>
+                    <p><strong>描述：</strong></p>
+                    <p>{{ building.description }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <h4 class="mb-3">
+                <i class="bi bi-door-open"></i> 场地列表
+            </h4>
+            
+            {% if building.rooms.all %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>场地名称</th>
+                            <th>类型</th>
+                            <th>楼层</th>
+                            <th>容量</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for room in building.rooms.all %}
+                        <tr>
+                            <td>{{ room.name }}</td>
+                            <td>{{ room.get_venue_type_display }}</td>
+                            <td>{{ room.floor|default:"-" }} 楼</td>
+                            <td>{{ room.capacity }} 人</td>
+                            <td>
+                                {% if room.status == 'available' %}
+                                <span class="badge bg-success">{{ room.get_status_display }}</span>
+                                {% elif room.status == 'maintenance' %}
+                                <span class="badge bg-warning">{{ room.get_status_display }}</span>
+                                {% else %}
+                                <span class="badge bg-danger">{{ room.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'venues:room_detail' room.pk %}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                该楼宇暂无场地数据。
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

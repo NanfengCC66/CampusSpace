@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}审批预约 - CampusSpace{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header {% if action == 'approve' %}bg-success{% else %}bg-danger{% endif %} text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-{% if action == 'approve' %}check{% else %}times{% endif %} me-2"></i>
+                        {% if action == 'approve' %}审批通过{% else %}审批拒绝{% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h6 class="text-muted">预约信息</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td width="120"><strong>预约编号：</strong></td>
+                                <td>{{ booking.booking_no }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>场地：</strong></td>
+                                <td>{{ booking.venue.building.name }} - {{ booking.venue.name }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>预约人：</strong></td>
+                                <td>{{ booking.user.get_full_name|default:booking.user.username }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>使用目的：</strong></td>
+                                <td>{{ booking.title }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>时间段：</strong></td>
+                                <td>{{ booking.start_time|date:"Y-m-d H:i" }} 至 {{ booking.end_time|date:"H:i" }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>参与人数：</strong></td>
+                                <td>{{ booking.participant_count }}人</td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.comment.id_for_label }}" class="form-label">
+                                {% if action == 'approve' %}审批意见{% else %}拒绝原因 <span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {% if action == 'approve' %}
+                                {{ form.comment }}
+                            {% else %}
+                                {{ form.reason }}
+                            {% endif %}
+                            {% if form.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'bookings:approval_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>返回
+                            </a>
+                            <button type="submit" class="btn {% if action == 'approve' %}btn-success{% else %}btn-danger{% endif %}">
+                                <i class="fas fa-{% if action == 'approve' %}check{% else %}times{% endif %} me-2"></i>
+                                确认{% if action == 'approve' %}通过{% else %}拒绝{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

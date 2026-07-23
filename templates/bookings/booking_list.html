@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}我的预约 - CampusSpace 智约{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'users:home' %}">首页</a></li>
+            <li class="breadcrumb-item active">我的预约</li>
+        </ol>
+    </nav>
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-calendar-check"></i> 我的预约</h2>
+    </div>
+    
+    <!-- 状态筛选 -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">预约状态</label>
+                    <select name="status" class="form-select">
+                        <option value="">全部</option>
+                        {% for status_val, status_label in status_choices %}
+                        <option value="{{ status_val }}" 
+                                {% if request.GET.status == status_val %}selected{% endif %}>
+                            {{ status_label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-search"></i> 筛选
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    {% if bookings %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>预约编号</th>
+                    <th>场地</th>
+                    <th>使用目的</th>
+                    <th>预约时间</th>
+                    <th>时长</th>
+                    <th>人数</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in bookings %}
+                <tr>
+                    <td><small>{{ booking.booking_no }}</small></td>
+                    <td>{{ booking.venue.name }}</td>
+                    <td>{{ booking.title }}</td>
+                    <td>
+                        <small>
+                            {{ booking.start_time|date:"m-d H:i" }} - {{ booking.end_time|date:"H:i" }}
+                        </small>
+                    </td>
+                    <td>{{ booking.duration_display }}</td>
+                    <td>{{ booking.participant_count }}人</td>
+                    <td>
+                        {% if booking.status == 'pending' %}
+                        <span class="badge bg-warning">{{ booking.get_status_display }}</span>
+                        {% elif booking.status == 'approved' %}
+                        <span class="badge bg-success">{{ booking.get_status_display }}</span>
+                        {% elif booking.status == 'rejected' %}
+                        <span class="badge bg-danger">{{ booking.get_status_display }}</span>
+                        {% elif booking.status == 'cancelled' %}
+                        <span class="badge bg-secondary">{{ booking.get_status_display }}</span>
+                        {% else %}
+                        <span class="badge bg-info">{{ booking.get_status_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'bookings:booking_detail' booking.pk %}" 
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye"></i> 详情
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> 您还没有预约记录。
+        <a href="{% url 'venues:room_list' %}">立即预约场地</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

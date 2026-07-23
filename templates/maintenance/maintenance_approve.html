@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}审批维修申请 - CampusSpace 智约{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'users:home' %}">首页</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'maintenance:maintenance_list' %}">维修停用列表</a></li>
+            <li class="breadcrumb-item active">审批维修申请</li>
+        </ol>
+    </nav>
+    
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">
+                        <i class="bi bi-check-circle text-primary"></i> 审批维修申请
+                    </h3>
+                    
+                    <div class="alert alert-info">
+                        <h5><i class="bi bi-info-circle"></i> 维修申请信息</h5>
+                        <hr>
+                        <p><strong>场地：</strong>{{ maintenance.venue.name }}</p>
+                        <p><strong>停用原因：</strong>{{ maintenance.reason }}</p>
+                        <p><strong>开始时间：</strong>{{ maintenance.start_time|date:"Y-m-d H:i" }}</p>
+                        <p><strong>预计结束：</strong>{{ maintenance.end_time|date:"Y-m-d H:i" }}</p>
+                        <p><strong>维修时长：</strong>{{ maintenance.duration }}</p>
+                        <p><strong>申请人：</strong>{{ maintenance.created_by.first_name|default:maintenance.created_by.username }}</p>
+                        {% if maintenance.remark %}
+                        <p><strong>备注：</strong>{{ maintenance.remark }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" name="action" value="approve" 
+                                    class="btn btn-success flex-fill">
+                                <i class="bi bi-check-circle"></i> 审批通过
+                            </button>
+                            <button type="submit" name="action" value="reject" 
+                                    class="btn btn-danger flex-fill"
+                                    onclick="return confirm('确定要拒绝该维修申请吗？');">
+                                <i class="bi bi-x-circle"></i> 审批拒绝
+                            </button>
+                        </div>
+                        
+                        <a href="{% url 'maintenance:maintenance_list' %}" 
+                           class="btn btn-secondary w-100 mt-3">
+                            <i class="bi bi-arrow-left"></i> 返回列表
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

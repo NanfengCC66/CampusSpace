@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}待审批列表 - CampusSpace{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3>
+                <i class="fas fa-clipboard-check text-primary me-2"></i>待审批预约
+                <span class="badge bg-warning">{{ bookings.count }}</span>
+            </h3>
+        </div>
+    </div>
+    
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <form method="get" class="row g-2">
+                <div class="col-auto">
+                    <select name="venue" class="form-select">
+                        <option value="">所有场地</option>
+                        {% for venue in venues %}
+                            <option value="{{ venue.id }}" {% if request.GET.venue == venue.id|stringformat:"s" %}selected{% endif %}>
+                                {{ venue.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter"></i> 筛选
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    {% if bookings %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>预约编号</th>
+                        <th>场地</th>
+                        <th>预约人</th>
+                        <th>使用目的</th>
+                        <th>时间段</th>
+                        <th>人数</th>
+                        <th>提交时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in bookings %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'bookings:booking_detail' booking.pk %}">
+                                    {{ booking.booking_no }}
+                                </a>
+                            </td>
+                            <td>
+                                <small class="text-muted">{{ booking.venue.building.name }}</small><br>
+                                {{ booking.venue.name }}
+                            </td>
+                            <td>
+                                {{ booking.user.get_full_name|default:booking.user.username }}
+                                <small class="text-muted">({{ booking.user.get_role_display }})</small>
+                            </td>
+                            <td>{{ booking.title }}</td>
+                            <td>
+                                <small>
+                                    {{ booking.start_time|date:"m-d H:i" }} - {{ booking.end_time|date:"H:i" }}
+                                </small>
+                            </td>
+                            <td>{{ booking.participant_count }}人</td>
+                            <td>
+                                <small>{{ booking.created_at|date:"m-d H:i" }}</small>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'bookings:approve_booking' booking.pk %}" 
+                                       class="btn btn-success" title="通过">
+                                        <i class="fas fa-check"></i>
+                                    </a>
+                                    <a href="{% url 'bookings:reject_booking' booking.pk %}" 
+                                       class="btn btn-danger" title="拒绝">
+                                        <i class="fas fa-times"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>暂无待审批的预约
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
